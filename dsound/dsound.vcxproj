@@ -14,6 +14,7 @@
     <ProjectGuid>{457D22C0-E3D3-4BF7-BD01-144A085C7B75}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>dsound</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

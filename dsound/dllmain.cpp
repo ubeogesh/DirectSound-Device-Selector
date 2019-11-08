@@ -15,10 +15,10 @@
 */
 
 #include "dsound.h"
+#define SELECT_AUDIO_DEVICE L"dsound_select"
 
 #pragma comment (lib, "dxguid.lib")
 
-std::ofstream Log::LOG("dsound.log");
 AddressLookupTable<void> ProxyAddressLookupTable = AddressLookupTable<void>();
 
 DirectSoundCreateProc m_pDirectSoundCreate;
@@ -33,6 +33,7 @@ GetDeviceIDProc m_pGetDeviceID;
 DirectSoundFullDuplexCreateProc m_pDirectSoundFullDuplexCreate;
 DirectSoundCreate8Proc m_pDirectSoundCreate8;
 DirectSoundCaptureCreate8Proc m_pDirectSoundCaptureCreate8;
+LPCGUID m_overrideDevice;
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 {
@@ -47,7 +48,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		char path[MAX_PATH];
 		GetSystemDirectoryA(path, MAX_PATH);
 		strcat_s(path, "\\dsound.dll");
-		Log() << "Loading " << path;
 		dsounddll = LoadLibraryA(path);
 
 		// Get function addresses
@@ -63,6 +63,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved)
 		m_pDirectSoundFullDuplexCreate = (DirectSoundFullDuplexCreateProc)GetProcAddress(dsounddll, "DirectSoundFullDuplexCreate");
 		m_pDirectSoundCreate8 = (DirectSoundCreate8Proc)GetProcAddress(dsounddll, "DirectSoundCreate8");
 		m_pDirectSoundCaptureCreate8 = (DirectSoundCaptureCreate8Proc)GetProcAddress(dsounddll, "DirectSoundCaptureCreate8");
+		
+		// Find the device. Result will be in overrideDevice.
+		BOOL CALLBACK DSEnumProc(LPGUID lpGUID, LPCTSTR lpszDesc, LPCTSTR lpszDrvName, LPVOID lpContext);
+		DirectSoundEnumerateW(DSEnumProc, NULL);
 		break;
 
 	case DLL_PROCESS_DETACH:
@@ -80,7 +84,10 @@ HRESULT WINAPI DirectSoundCreate(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUN
 		return E_FAIL;
 	}
 
-	HRESULT hr = m_pDirectSoundCreate(pcGuidDevice, ppDS, pUnkOuter);
+	if (m_overrideDevice == NULL)
+		m_overrideDevice = pcGuidDevice;
+
+	HRESULT hr = m_pDirectSoundCreate(m_overrideDevice, ppDS, pUnkOuter);
 
 	if (SUCCEEDED(hr) && ppDS)
 	{
@@ -240,4 +247,19 @@ HRESULT WINAPI DirectSoundCaptureCreate8(LPCGUID pcGuidDevice, LPDIRECTSOUNDCAPT
 	}
 
 	return hr;
+}
+
+BOOL CALLBACK DSEnumProc(LPGUID lpGUID, LPCTSTR lpszDesc, LPCTSTR lpszDrvName, LPVOID lpContext)
+{
+	if (lpGUID == NULL || lpszDesc == NULL)
+		return TRUE;
+
+	std::wstring deviceDesc(lpszDesc);
+	if (deviceDesc.find(SELECT_AUDIO_DEVICE) != std::wstring::npos)
+	{
+		m_overrideDevice = lpGUID;
+		return FALSE;
+	}
+
+	return TRUE;
 }
