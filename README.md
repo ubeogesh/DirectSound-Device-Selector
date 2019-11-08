@@ -1,25 +1,19 @@
-# DirectX Wrappers
+# DirectSound Device Selector
 
-### Introduction
+This DirectSound wrapper allows overriding of application's choice of audio device. 
 
-Wraps the main DirectX and Direct3D DLLs.  It allows you to intercept calls to DirectX and Direct3D interface functions so that you can log API calls or you can add your own code into the game, such as enabling Anti-Aliasing or creating overlays in the game. Once you have compiled this you can simply copy the DLL into the same folder as the game's executable and it should load it as if it were the real DLL file. It still forwards all calls to the real one in System32, it just allows stuff to happen in between. 
+It is useful for games that don't allow changing audio device (always use default audio device)
 
-Wraps the following versions of DirectX:
-- DirectX 1-7, DirectDraw and Direct3D (ddraw.dll)
-- DirectX 8, Direct3D (d3d8.dll)
-- DirectX 9, Direct3D (d3d9.dll)
-- DirectSound and DirectSound8 (dsound.dll)
-- DirectInput (dinput.dll)
-- DirectInput8 (dinput8.dll)
+Can be used in conjuction with Virtual Audio Cable to capture game sounds separately from other system sounds. 
 
-I plan to add these DLLs later:
-- d2d1.dll
-- d3d10.dll
-- d3d10core.dll
-- d3d11.dll
-- d3d12.dll
+Usage: 
 
-Note: It currently only works with 32bit games, but I might add 64bit support at some point.
+1) Put dsound.dll in the game's folder
+2) Edit the target sound device in windows: add dsound_select anywhere in it's name.
+
+Note: supposedly will only work with 32-bit games, as the original wrappers claim only 32 bit applications support.
+
+### Original License:
 
 ### License
 
